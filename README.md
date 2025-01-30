@@ -1,1 +1,1 @@
-tinggal updatenya belum
+coba connect ke database

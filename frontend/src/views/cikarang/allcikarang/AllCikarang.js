@@ -1,166 +1,186 @@
 import React from 'react'
-import { CCard, CCardBody, CCardHeader, CCol, CRow, CCardText, CCardTitle } from '@coreui/react'
+import { CCard, CCardBody, CCardHeader, CCol, CRow, CProgress } from '@coreui/react'
 import { Link } from 'react-router-dom'
-
-const machines = [
-  {
-    machine: '11003 MANUAL LATHE OKUMA',
-    status: 'Running',
-    durasi: '32 menit 49 detik',
-    planning: 300,
-    actual: 10,
-    cycleTime: 60,
-    performa: '16%',
-  },
-  {
-    machine: 'EBW - DRILL CARRIER 23015-23017-23018',
-    status: 'Stop',
-    durasi: '50 menit 10 detik',
-    planning: 200,
-    actual: 150,
-    cycleTime: 60,
-    performa: '90%',
-  },
-  {
-    machine: 'MACH LINE-1 CASE M38 12257 - 12263',
-    status: 'Warning',
-    durasi: '10 menit 5 detik',
-    planning: 150,
-    actual: 100,
-    cycleTime: 60,
-    performa: '67%',
-  },
-  {
-    machine: 'LATHE LINE-03 GEAR SUN 12252',
-    status: 'Little Stop',
-    durasi: '20 menit 0 detik',
-    planning: 100,
-    actual: 50,
-    cycleTime: 60,
-    performa: '50%',
-  },
-  {
-    machine: 'ASSY GEAR COMP PLANETARY 62030',
-    status: 'Line Stop',
-    durasi: '15 menit 30 detik',
-    planning: 120,
-    actual: 30,
-    cycleTime: 60,
-    performa: '25%',
-  },
-  {
-    machine: 'ASSY END COMP TIE ROD 91043-91044',
-    status: 'Power Off',
-    durasi: '0 menit 0 detik',
-    planning: 0,
-    actual: 0,
-    cycleTime: 0,
-    performa: '0%',
-  },
-]
+import cardData from './dataCikarang'
 
 const AllCikarang = () => {
-  const statusColors = {
-    running: 'var(--cui-success)',
-    stop: 'var(--cui-danger)',
-    warning: 'var(--cui-warning)',
-
-    'little stop': '#fc38da',
-    'line stop': '#C03FAB',
-    'power off': 'var(--cui-secondary)',
+  const getColors = (status) => {
+    switch (status.toLowerCase()) {
+      case 'running':
+        return {
+          borderColor: 'var(--cui-success)',
+          headerColor: 'var(--cui-success)',
+          signal: [
+            'signal-dark-red',
+            'signal-dark-yellow',
+            'signal-green',
+            'signal-dark-blue',
+            'signal-dark-white',
+          ],
+        }
+      case 'warning':
+        return {
+          borderColor: 'var(--cui-warning)',
+          headerColor: 'var(--cui-warning)',
+          signal: [
+            'signal-dark-red',
+            'signal-yellow',
+            'signal-dark-green',
+            'signal-dark-blue',
+            'signal-dark-white',
+          ],
+        }
+      case 'stop':
+        return {
+          borderColor: 'var(--cui-danger)',
+          headerColor: 'var(--cui-danger)',
+          signal: [
+            'signal-red',
+            'signal-dark-yellow',
+            'signal-dark-green',
+            'signal-dark-blue',
+            'signal-dark-white',
+          ],
+        }
+      case 'little stop':
+        return {
+          borderColor: '#fc38da',
+          headerColor: '#fc38da',
+          signal: [
+            'signal-dark-red',
+            'signal-dark-yellow',
+            'signal-dark-green',
+            'signal-blue',
+            'signal-dark-white',
+          ],
+        }
+      case 'line stop':
+        return {
+          borderColor: '#c03fab',
+          headerColor: '#c03fab',
+          signal: [
+            'signal-dark-green',
+            'signal-dark-yellow',
+            'signal-dark-red',
+            'signal-blue',
+            'signal-dark-white',
+          ],
+        }
+      case 'power off':
+        return {
+          borderColor: 'var(--cui-secondary)',
+          headerColor: 'var(--cui-secondary)',
+          signal: [
+            'signal-dark-green',
+            'signal-dark-yellow',
+            'signal-dark-red',
+            'signal-dark-blue',
+            'signal-white',
+          ],
+        }
+      default:
+        return {
+          borderColor: '#000',
+          headerColor: '#000',
+          signal: [
+            'signal-dark-green',
+            'signal-dark-yellow',
+            'signal-dark-red',
+            'signal-dark-blue',
+            'signal-dark-white',
+          ],
+        }
+    }
   }
 
   return (
     <CRow className="d-flex align-items-stretch">
-      {machines.map((item, index) => {
-        const borderClass =
-          item.status.toLowerCase() === 'running'
-            ? 'card-border-green'
-            : item.status.toLowerCase() === 'stop'
-              ? 'card-border-red'
-              : item.status.toLowerCase() === 'warning'
-                ? 'card-border-warning'
-                : item.status.toLowerCase() === 'little stop'
-                  ? 'card-border-pink'
-                  : item.status.toLowerCase() === 'line stop'
-                    ? 'card-border-purple'
-                    : item.status.toLowerCase() === 'power off'
-                      ? '' // Tidak ada kelas border untuk Power Off
-                      : '' // Menentukan kelas border berdasarkan status
+      {cardData.map((data, index) => {
+        const { borderColor, headerColor, signal } = getColors(data.message)
+        const progress = data.Plan > 0 ? (data.actual / data.Plan) * 100 : 0
 
         return (
           <CCol md={2} sm={2} key={index}>
             <CCard
-              textColor="white"
-              className={`mb-3 custom-card ${borderClass}`}
+              className="mb-4"
               style={{
-                width: '100%',
+                borderColor: borderColor,
+                borderWidth: '1px',
+                borderStyle: 'solid',
                 height: '100%',
-                borderColor:
-                  item.status.toLowerCase() === 'power off'
-                    ? 'transparent'
-                    : statusColors[item.status.toLowerCase()],
               }}
             >
               <CCardHeader
-                className="card-header-machine-status"
                 style={{
-                  backgroundColor:
-                    item.status.toLowerCase() === 'power off'
-                      ? statusColors['power off']
-                      : statusColors[item.status.toLowerCase()],
+                  backgroundColor: headerColor,
+                  color: 'white',
+                  height: '50px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '5px 10px',
                 }}
               >
                 <Link
-                  to={`/cikarang/machine/${encodeURIComponent(item.machine)}`}
+                  to={`/cikarang/machine/${encodeURIComponent(data.mesin)}`}
                   style={{
-                    color: item.status.toLowerCase() === 'power off' ? 'white' : 'white',
+                    color: 'white',
                     textDecoration: 'underline',
                     cursor: 'pointer',
+                    width: '100%',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    textTransform: 'uppercase',
                   }}
                 >
-                  {item.machine}
+                  {data.mesin}
                 </Link>
               </CCardHeader>
-              <CCardBody>
-                <CCardTitle
-                  className="machine-status-text"
-                  style={{ textAlign: 'center', textTransform: 'uppercase' }}
+              <CCardBody style={{ padding: '10px' }}>
+                <div
+                  style={{ textAlign: 'center', marginBottom: '5px', textTransform: 'uppercase' }}
                 >
-                  {item.status}
-                </CCardTitle>
-                <CCardText className="machine-status-text">
-                  <div className="status-row">
-                    <div>
-                      <strong>Planning:</strong>
-                    </div>
-                    <div>{item.planning}</div>
+                  <strong>{data.message}</strong>
+                </div>
+                <div style={{ display: 'flex', gap: '0' }}>
+                  <div
+                    className="signal-tower"
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      minWidth: '30px',
+                      height: '100px',
+                    }}
+                  >
+                    {signal.map((signalClass, i) => (
+                      <div
+                        key={i}
+                        className={`signal ${signalClass}`}
+                        style={{
+                          height: '20px',
+                          width: '30px',
+                          borderRadius: '2px',
+                        }}
+                      />
+                    ))}
                   </div>
-                  <div className="status-row">
-                    <div>
-                      <strong>Actual:</strong>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ margin: '0' }}>
+                      <strong>Plan:</strong> {data.Plan}
+                    </p>
+                    <div style={{ marginBottom: '5px' }}>
+                      <strong>Actual:</strong> {data.actual}
+                      <CProgress height={10} value={progress} />
                     </div>
-                    <div>{item.actual}</div>
-                  </div>
-                  <div className="status-row">
                     <div>
-                      <strong>Durasi:</strong>
+                      <strong>Performance:</strong> {data.performance}
+                      <CProgress
+                        height={10}
+                        value={parseFloat(data.performance.replace('%', ''))}
+                      />
                     </div>
-                    <div>{item.durasi}</div>
                   </div>
-                  <div className="status-row">
-                    <div>
-                      <strong>Performa:</strong>
-                    </div>
-                    <div>{item.performa}</div>
-                  </div>
-                  <div className="status-row">
-                    <div>
-                      <strong>Cycle Time:</strong>
-                    </div>
-                    <div>{item.cycleTime}</div>
-                  </div>
-                </CCardText>
+                </div>
               </CCardBody>
             </CCard>
           </CCol>

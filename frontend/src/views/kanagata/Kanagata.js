@@ -1,158 +1,191 @@
 import React from 'react'
-import { CCard, CCardBody, CCardHeader, CCol, CRow } from '@coreui/react'
+import { CCard, CCardBody, CCardHeader, CCol, CRow, CProgress } from '@coreui/react'
+import { Link } from 'react-router-dom'
+import cardData from './dataKanagata'
 
 const Kanagata = () => {
-  const purchaseOrders = [
-    {
-      No: 1,
-      NoPR: 'PR001',
-      ReqDate: '2023-10-01',
-      Item: 'Mesin Pemotong',
-      Qty: 2,
-      Unit: 'Unit',
-      Price: 5000000,
-      Total: 10000000,
-      Plant: 'Plant A',
-      MaterialGroup: 'Mesin',
-      PIC: 'John Doe',
-      PO: 'PO001',
-      PODate: '2023-10-02',
-      Descriptions: 'Pembelian mesin pemotong untuk produksi',
-      Budget: 12000000,
-      NoSPB: 'SPB001',
-      NoRingi: 'RNG001',
-      NoAsset: 'ASSET001',
-      Remark: 'Segera dikirim',
-      Status: 'Dalam Proses',
-      Supplier: 'PT. Mesin Jaya',
-      TotalItem: 2,
-      ItemReceived: 2,
-      PercentReceived: 100,
-      AmountRingi: 10000000,
-      AmountPO: 10000000,
-      GapRingi: 0,
-      ArrivedAmount: 2,
-      ToBeDelivery: 0,
-      ToBeDeliveryProject: 'Project A',
-    },
-    {
-      No: 2,
-      NoPR: 'PR002',
-      ReqDate: '2023-10-03',
-      Item: 'Bahan Baku',
-      Qty: 100,
-      Unit: 'Kg',
-      Price: 20000,
-      Total: 2000000,
-      Plant: 'Plant B',
-      MaterialGroup: 'Bahan',
-      PIC: 'Jane Smith',
-      PO: 'PO002',
-      PODate: '2023-10-04',
-      Descriptions: 'Pembelian bahan baku untuk produksi',
-      Budget: 3000000,
-      NoSPB: 'SPB002',
-      NoRingi: 'RNG002',
-      NoAsset: 'ASSET002',
-      Remark: 'Dalam pengiriman',
-      Status: 'Dikirim',
-      Supplier: 'PT. Bahan Baku',
-      TotalItem: 100,
-      ItemReceived: 80,
-      PercentReceived: 80,
-      AmountRingi: 1600000,
-      AmountPO: 2000000,
-      GapRingi: 400000,
-      ArrivedAmount: 80,
-      ToBeDelivery: 20,
-      ToBeDeliveryProject: 'Project B',
-    },
-    // Tambahkan lebih banyak data sesuai kebutuhan
-  ]
+  const getColors = (status) => {
+    switch (status.toLowerCase()) {
+      case 'running':
+        return {
+          borderColor: 'var(--cui-success)',
+          headerColor: 'var(--cui-success)',
+          signal: [
+            'signal-dark-red',
+            'signal-dark-yellow',
+            'signal-green',
+            'signal-dark-blue',
+            'signal-dark-white',
+          ],
+        }
+      case 'warning':
+        return {
+          borderColor: 'var(--cui-warning)',
+          headerColor: 'var(--cui-warning)',
+          signal: [
+            'signal-dark-red',
+            'signal-yellow',
+            'signal-dark-green',
+            'signal-dark-blue',
+            'signal-dark-white',
+          ],
+        }
+      case 'stop':
+        return {
+          borderColor: 'var(--cui-danger)',
+          headerColor: 'var(--cui-danger)',
+          signal: [
+            'signal-red',
+            'signal-dark-yellow',
+            'signal-dark-green',
+            'signal-dark-blue',
+            'signal-dark-white',
+          ],
+        }
+      case 'little stop':
+        return {
+          borderColor: '#fc38da',
+          headerColor: '#fc38da',
+          signal: [
+            'signal-dark-red',
+            'signal-dark-yellow',
+            'signal-dark-green',
+            'signal-blue',
+            'signal-dark-white',
+          ],
+        }
+      case 'line stop':
+        return {
+          borderColor: '#c03fab',
+          headerColor: '#c03fab',
+          signal: [
+            'signal-dark-green',
+            'signal-dark-yellow',
+            'signal-dark-red',
+            'signal-blue',
+            'signal-dark-white',
+          ],
+        }
+      case 'power off':
+        return {
+          borderColor: 'var(--cui-secondary)',
+          headerColor: 'var(--cui-secondary)',
+          signal: [
+            'signal-dark-green',
+            'signal-dark-yellow',
+            'signal-dark-red',
+            'signal-dark-blue',
+            'signal-white',
+          ],
+        }
+      default:
+        return {
+          borderColor: '#000',
+          headerColor: '#000',
+          signal: [
+            'signal-dark-green',
+            'signal-dark-yellow',
+            'signal-dark-red',
+            'signal-dark-blue',
+            'signal-dark-white',
+          ],
+        }
+    }
+  }
 
   return (
-    <CRow>
-      <CCol xs={12}>
-        <CCard className="mb-4">
-          <CCardHeader>
-            <strong>Tabel Purchase Order</strong>
-          </CCardHeader>
-          <CCardBody>
-            <table className="table table-bordered">
-              <thead>
-                <tr>
-                  <th>No.</th>
-                  <th>No PR</th>
-                  <th>Req. Date</th>
-                  <th>Item</th>
-                  <th>Qty</th>
-                  <th>Unit</th>
-                  <th>Price</th>
-                  <th>Total</th>
-                  <th>Plant</th>
-                  <th>Material Group</th>
-                  <th>PIC</th>
-                  <th>PO</th>
-                  <th>PO Date</th>
-                  <th>Descriptions</th>
-                  <th>Budget</th>
-                  <th>No SPB</th>
-                  <th>No Ringi</th>
-                  <th>No Asset</th>
-                  <th>Remark</th>
-                  <th>Status</th>
-                  <th>Supplier</th>
-                  <th>Total Item</th>
-                  <th>Item Received</th>
-                  <th>% Received</th>
-                  <th>Amount Ringi</th>
-                  <th>Amount PO</th>
-                  <th>Gap Ringi</th>
-                  <th>Arrived Amount</th>
-                  <th>To Be Delivery</th>
-                  <th>To Be Delivery / Project</th>
-                </tr>
-              </thead>
-              <tbody>
-                {purchaseOrders.map((order) => (
-                  <tr key={order.No}>
-                    <td>{order.No}</td>
-                    <td>{order.NoPR}</td>
-                    <td>{order.ReqDate}</td>
-                    <td>{order.Item}</td>
-                    <td>{order.Qty}</td>
-                    <td>{order.Unit}</td>
-                    <td>{order.Price}</td>
-                    <td>{order.Total}</td>
-                    <td>{order.Plant}</td>
-                    <td>{order.MaterialGroup}</td>
-                    <td>{order.PIC}</td>
-                    <td>{order.PO}</td>
-                    <td>{order.PODate}</td>
-                    <td>{order.Descriptions}</td>
-                    <td>{order.Budget}</td>
-                    <td>{order.NoSPB}</td>
-                    <td>{order.NoRingi}</td>
-                    <td>{order.NoAsset}</td>
-                    <td>{order.Remark}</td>
-                    <td>{order.Status}</td>
-                    <td>{order.Supplier}</td>
-                    <td>{order.TotalItem}</td>
-                    <td>{order.ItemReceived}</td>
-                    <td>{order.PercentReceived}</td>
-                    <td>{order.AmountRingi}</td>
-                    <td>{order.AmountPO}</td>
-                    <td>{order.GapRingi}</td>
-                    <td>{order.ArrivedAmount}</td>
-                    <td>{order.ToBeDelivery}</td>
-                    <td>{order.ToBeDeliveryProject}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </CCardBody>
-        </CCard>
-      </CCol>
+    <CRow className="d-flex align-items-stretch">
+      {cardData.map((data, index) => {
+        const { borderColor, headerColor, signal } = getColors(data.message)
+        const progress = data.Plan > 0 ? (data.actual / data.Plan) * 100 : 0
+
+        return (
+          <CCol md={2} sm={2} key={index}>
+            <CCard
+              className="mb-4"
+              style={{
+                borderColor: borderColor,
+                borderWidth: '1px',
+                borderStyle: 'solid',
+                height: '100%',
+              }}
+            >
+              <CCardHeader
+                style={{
+                  backgroundColor: headerColor,
+                  color: 'white',
+                  height: '50px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '5px 10px',
+                }}
+              >
+                <Link
+                  to={`/cikarang/machine/${encodeURIComponent(data.mesin)}`}
+                  style={{
+                    color: 'white',
+                    textDecoration: 'underline',
+                    cursor: 'pointer',
+                    width: '100%',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  {data.mesin}
+                </Link>
+              </CCardHeader>
+              <CCardBody style={{ padding: '10px' }}>
+                <div
+                  style={{ textAlign: 'center', marginBottom: '5px', textTransform: 'uppercase' }}
+                >
+                  <strong>{data.message}</strong>
+                </div>
+                <div style={{ display: 'flex', gap: '0' }}>
+                  <div
+                    className="signal-tower"
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      minWidth: '30px',
+                      height: '100px',
+                    }}
+                  >
+                    {signal.map((signalClass, i) => (
+                      <div
+                        key={i}
+                        className={`signal ${signalClass}`}
+                        style={{
+                          height: '20px',
+                          width: '30px',
+                          borderRadius: '2px',
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ margin: '0' }}>
+                      <strong>Plan:</strong> {data.Plan}
+                    </p>
+                    <div style={{ marginBottom: '5px' }}>
+                      <strong>Actual:</strong> {data.actual}
+                      <CProgress height={10} value={progress} />
+                    </div>
+                    <div>
+                      <strong>Performance:</strong> {data.performance}
+                      <CProgress
+                        height={10}
+                        value={parseFloat(data.performance.replace('%', ''))}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </CCardBody>
+            </CCard>
+          </CCol>
+        )
+      })}
     </CRow>
   )
 }

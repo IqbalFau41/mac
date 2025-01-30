@@ -5,8 +5,8 @@ import cardData from './dataFinishing'
 
 const Finishing = () => {
   const getColors = (status) => {
-    switch (status) {
-      case 'Running':
+    switch (status.toLowerCase()) {
+      case 'running':
         return {
           borderColor: 'var(--cui-success)',
           headerColor: 'var(--cui-success)',
@@ -18,7 +18,7 @@ const Finishing = () => {
             'signal-dark-white',
           ],
         }
-      case 'Warning':
+      case 'warning':
         return {
           borderColor: 'var(--cui-warning)',
           headerColor: 'var(--cui-warning)',
@@ -30,7 +30,7 @@ const Finishing = () => {
             'signal-dark-white',
           ],
         }
-      case 'Stop':
+      case 'stop':
         return {
           borderColor: 'var(--cui-danger)',
           headerColor: 'var(--cui-danger)',
@@ -42,7 +42,7 @@ const Finishing = () => {
             'signal-dark-white',
           ],
         }
-      case 'Little Stop':
+      case 'little stop':
         return {
           borderColor: '#fc38da',
           headerColor: '#fc38da',
@@ -54,7 +54,7 @@ const Finishing = () => {
             'signal-dark-white',
           ],
         }
-      case 'Line Stop':
+      case 'line stop':
         return {
           borderColor: '#c03fab',
           headerColor: '#c03fab',
@@ -66,7 +66,7 @@ const Finishing = () => {
             'signal-dark-white',
           ],
         }
-      case 'Power Off':
+      case 'power off':
         return {
           borderColor: 'var(--cui-secondary)',
           headerColor: 'var(--cui-secondary)',
@@ -94,12 +94,13 @@ const Finishing = () => {
   }
 
   return (
-    <CRow>
+    <CRow className="d-flex align-items-stretch">
       {cardData.map((data, index) => {
         const { borderColor, headerColor, signal } = getColors(data.message)
         const progress = data.Plan > 0 ? (data.actual / data.Plan) * 100 : 0
+
         return (
-          <CCol className="col-3" xs={2} key={index}>
+          <CCol md={2} sm={2} key={index}>
             <CCard
               className="mb-4"
               style={{
@@ -120,7 +121,7 @@ const Finishing = () => {
                 }}
               >
                 <Link
-                  to={`/finishing/machine/${encodeURIComponent(data.mesin)}`} // Link ke halaman detail mesin
+                  to={`/cikarang/machine/${encodeURIComponent(data.mesin)}`}
                   style={{
                     color: 'white',
                     textDecoration: 'underline',
@@ -164,13 +165,15 @@ const Finishing = () => {
                     ))}
                   </div>
                   <div style={{ flex: 1 }}>
-                    <p style={{ margin: '0' }}>Plan: {data.Plan}</p>
+                    <p style={{ margin: '0' }}>
+                      <strong>Plan:</strong> {data.Plan}
+                    </p>
                     <div style={{ marginBottom: '5px' }}>
-                      Actual: {data.actual}
+                      <strong>Actual:</strong> {data.actual}
                       <CProgress height={10} value={progress} />
                     </div>
                     <div>
-                      Performa: {data.performance}
+                      <strong>Performance:</strong> {data.performance}
                       <CProgress
                         height={10}
                         value={parseFloat(data.performance.replace('%', ''))}

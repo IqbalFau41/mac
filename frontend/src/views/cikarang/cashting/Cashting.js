@@ -1,193 +1,219 @@
 import React from 'react'
-import { CCard, CCardBody, CCardHeader, CCol, CRow, CProgress } from '@coreui/react'
-import { Link } from 'react-router-dom'
-import cardData from './dataCashting'
+import { useParams } from 'react-router-dom'
+import {
+  CCard,
+  CCardBody,
+  CCardHeader,
+  CCardText,
+  CRow,
+  CCol,
+  CProgress,
+  CProgressStacked,
+} from '@coreui/react'
 
-const Cashting = () => {
-  const getColors = (status) => {
-    switch (status.toLowerCase()) {
-      case 'running':
-        return {
-          borderColor: 'var(--cui-success)',
-          headerColor: 'var(--cui-success)',
-          signal: [
-            'signal-dark-red',
-            'signal-dark-yellow',
-            'signal-green',
-            'signal-dark-blue',
-            'signal-dark-white',
-          ],
-        }
-      case 'warning':
-        return {
-          borderColor: 'var(--cui-warning)',
-          headerColor: 'var(--cui-warning)',
-          signal: [
-            'signal-dark-red',
-            'signal-yellow',
-            'signal-dark-green',
-            'signal-dark-blue',
-            'signal-dark-white',
-          ],
-        }
-      case 'stop':
-        return {
-          borderColor: 'var(--cui-danger)',
-          headerColor: 'var(--cui-danger)',
-          signal: [
-            'signal-red',
-            'signal-dark-yellow',
-            'signal-dark-green',
-            'signal-dark-blue',
-            'signal-dark-white',
-          ],
-        }
-      case 'little stop':
-        return {
-          borderColor: '#fc38da',
-          headerColor: '#fc38da',
-          signal: [
-            'signal-dark-red',
-            'signal-dark-yellow',
-            'signal-dark-green',
-            'signal-blue',
-            'signal-dark-white',
-          ],
-        }
-      case 'line stop':
-        return {
-          borderColor: '#c03fab',
-          headerColor: '#c03fab',
-          signal: [
-            'signal-dark-green',
-            'signal-dark-yellow',
-            'signal-dark-red',
-            'signal-blue',
-            'signal-dark-white',
-          ],
-        }
-      case 'power off':
-        return {
-          borderColor: 'var(--cui-secondary)',
-          headerColor: 'var(--cui-secondary)',
-          signal: [
-            'signal-dark-green',
-            'signal-dark-yellow',
-            'signal-dark-red',
-            'signal-dark-blue',
-            'signal-white',
-          ],
-        }
-      default:
-        return {
-          borderColor: '#000',
-          headerColor: '#000',
-          signal: [
-            'signal-dark-green',
-            'signal-dark-yellow',
-            'signal-dark-red',
-            'signal-dark-blue',
-            'signal-dark-white',
-          ],
-        }
-    }
+const MachineDetail = () => {
+  const { name } = useParams()
+
+  // Define status cards data
+  const cards = [
+    {
+      header: 'Status mesin',
+      color: 'success',
+      content: ['Running', 'Finish: 14%'],
+    },
+    {
+      header: 'Cycle Time',
+      color: 'danger',
+      content: ['40/1 detik', 'Downtime: 25 menit'],
+    },
+    {
+      header: 'Output Produksi',
+      color: 'info',
+      content: ['Good: 3541 Pcs', 'NG: 203 Pcs'],
+    },
+    {
+      header: 'Nama Produk',
+      color: 'secondary',
+      content: ['Assembly', 'Cams Shaft Transmisi Honda'],
+    },
+    {
+      header: 'Produksi Order',
+      color: 'secondary',
+      content: ['Tanggal: 01-01-2025', 'Order: 15000 Part'],
+    },
+    {
+      header: 'Estimasi Produk',
+      color: 'secondary',
+      content: ['Estimasi Selesai: 10-01-2025', 'Actual: 3000 Part'],
+    },
+  ]
+
+  // Define shift data with hours and progress values
+  const shifts = [
+    {
+      name: 'Shift 1',
+      hours: [
+        '07:00',
+        '08:00',
+        '09:00',
+        '10:00',
+        '11:00',
+        '12:00',
+        '13:00',
+        '14:00',
+        '15:00',
+        '16:00',
+      ],
+      progressValues: [60],
+      progressValues2: [30],
+      progressValues3: [10],
+    },
+    {
+      name: 'Shift 2',
+      hours: [
+        '16:00',
+        '17:00',
+        '18:00',
+        '19:00',
+        '20:00',
+        '21:00',
+        '22:00',
+        '23:00',
+        '00:00',
+        '01:00',
+      ],
+      progressValues: [50],
+      progressValues2: [5],
+      progressValues3: [20],
+    },
+    {
+      name: 'Shift 3',
+      hours: ['01:00', '02:00', '03:00', '04:00', '05:00', '06:00', '07:00'],
+      progressValues: [10],
+      progressValues2: [15],
+      progressValues3: [10],
+    },
+  ]
+
+  const gridContainerStyle = {
+    position: 'relative',
+    width: '100%',
+    marginBottom: '5px',
+    padding: '0',
+    height: '120px',
+  }
+
+  const gridLineStyle = {
+    position: 'absolute',
+    top: 25,
+    bottom: 25,
+    width: '2px',
+    backgroundColor: 'rgba(200, 200, 200, 0.5)',
+    zIndex: 1,
+  }
+
+  const timeTextStyle = {
+    position: 'absolute',
+    transform: 'translateX(-50%)',
+    width: 'auto',
+    fontSize: '0.9rem',
+    padding: '0 5px',
+  }
+
+  // Updated progress container style with height property for thicker bars
+  const progressContainerStyle = {
+    position: 'absolute',
+    left: '0',
+    right: '0',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    zIndex: 2,
+    padding: '0',
+    height: '32px', // Added height for thicker progress bars
   }
 
   return (
-    <CRow className="d-flex align-items-stretch">
-      {cardData.map((data, index) => {
-        const { borderColor, headerColor, signal } = getColors(data.message)
-        const progress = data.Plan > 0 ? (data.actual / data.Plan) * 100 : 0
+    <div>
+      {/* Added styles for thicker progress bars */}
+      <style>
+        {`
+          .progress-stacked {
+            height: 32px !important;
+          }
+          .progress-stacked .progress {
+            height: 32px !important;
+          }
+          .progress-stacked .progress-bar {
+            height: 32px !important;
+            font-size: 1rem !important;
+          }
+        `}
+      </style>
 
-        return (
-          <CCol md={2} sm={2} key={index}>
-            <CCard
-              className="mb-4"
-              style={{
-                borderColor: borderColor,
-                borderWidth: '1px',
-                borderStyle: 'solid',
-                height: '100%',
-              }}
-            >
-              <CCardHeader
-                style={{
-                  backgroundColor: headerColor,
-                  color: 'white',
-                  height: '50px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: '5px 10px',
-                }}
-              >
-                <Link
-                  to={`/cikarang/machine/${encodeURIComponent(data.mesin)}`}
-                  style={{
-                    color: 'white',
-                    textDecoration: 'underline',
-                    cursor: 'pointer',
-                    width: '100%',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  {data.mesin}
-                </Link>
+      <h2>Detail Mesin: {decodeURIComponent(name)}</h2>
+
+      {/* Status cards section */}
+      <CRow>
+        {cards.map((card, index) => (
+          <CCol sm={4} key={index}>
+            <CCard className={`mb-3 border-top-${card.color} border-top-3`}>
+              <CCardHeader className="text-body">{card.header}</CCardHeader>
+              <CCardBody className="p-4">
+                {card.content.map((text, textIndex) => (
+                  <CCardText key={textIndex}>{text}</CCardText>
+                ))}
+              </CCardBody>
+            </CCard>
+          </CCol>
+        ))}
+      </CRow>
+
+      {/* Production details section */}
+      <h2>Detail Production</h2>
+      <CRow>
+        {shifts.map((shift, index) => (
+          <CCol md={12} key={index}>
+            <CCard className="mb-3">
+              <CCardHeader className="text-body">
+                <strong>{shift.name}</strong>
               </CCardHeader>
-              <CCardBody style={{ padding: '10px' }}>
-                <div
-                  style={{ textAlign: 'center', marginBottom: '5px', textTransform: 'uppercase' }}
-                >
-                  <strong>{data.message}</strong>
-                </div>
-                <div style={{ display: 'flex', gap: '0' }}>
-                  <div
-                    className="signal-tower"
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between',
-                      minWidth: '30px',
-                      height: '100px',
-                    }}
-                  >
-                    {signal.map((signalClass, i) => (
-                      <div
-                        key={i}
-                        className={`signal ${signalClass}`}
-                        style={{
-                          height: '20px',
-                          width: '30px',
-                          borderRadius: '2px',
-                        }}
-                      />
-                    ))}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ margin: '0' }}>
-                      <strong>Plan:</strong> {data.Plan}
-                    </p>
-                    <div style={{ marginBottom: '5px' }}>
-                      <strong>Actual:</strong> {data.actual}
-                      <CProgress height={10} value={progress} />
-                    </div>
-                    <div>
-                      <strong>Performance:</strong> {data.performance}
-                      <CProgress
-                        height={10}
-                        value={parseFloat(data.performance.replace('%', ''))}
-                      />
-                    </div>
+              <CCardBody className="p-4">
+                <div style={gridContainerStyle}>
+                  {shift.hours.map((hour, index) => {
+                    const position = `${(100 * index) / (shift.hours.length - 1)}%`
+                    return (
+                      <React.Fragment key={index}>
+                        <span style={{ ...timeTextStyle, top: '0', left: position }}>{hour}</span>
+                        <div style={{ ...gridLineStyle, left: position }} />
+                        <span style={{ ...timeTextStyle, bottom: '0', left: position }}>
+                          {index * 10}
+                        </span>
+                      </React.Fragment>
+                    )
+                  })}
+
+                  {/* Progress bar with updated positioning */}
+                  <div style={progressContainerStyle}>
+                    <CProgressStacked className="progress-stacked">
+                      {shift.progressValues.map((value, valueIndex) => (
+                        <CProgress key={valueIndex} color="success" value={value} />
+                      ))}
+                      {shift.progressValues2.map((value, valueIndex) => (
+                        <CProgress key={`2-${valueIndex}`} color="danger" value={value} />
+                      ))}
+                      {shift.progressValues3.map((value, valueIndex) => (
+                        <CProgress key={`3-${valueIndex}`} color="warning" value={value} />
+                      ))}
+                    </CProgressStacked>
                   </div>
                 </div>
               </CCardBody>
             </CCard>
           </CCol>
-        )
-      })}
-    </CRow>
+        ))}
+      </CRow>
+    </div>
   )
 }
 
-export default Cashting
+export default MachineDetail

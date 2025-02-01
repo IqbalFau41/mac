@@ -45,12 +45,11 @@ export default defineConfig(() => {
     },
     server: {
       port: 3001,
-      host: true, // Mengikat ke semua alamat IP
+      host: true,
       proxy: {
         '/api': {
-          target: 'http://10.41.39.118:3001/',
+          target: 'http://localhost:8080', // Sesuaikan dengan port backend Anda
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, ''),
         },
       },
     },

@@ -1,3 +1,4 @@
+//backend/models/user.js
 const sql = require("mssql");
 const jwt = require("jsonwebtoken");
 const Joi = require("joi");

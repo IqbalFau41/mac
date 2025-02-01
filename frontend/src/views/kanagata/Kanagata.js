@@ -1,9 +1,13 @@
-import React from 'react'
-import { CCard, CCardBody, CCardHeader, CCol, CRow, CProgress } from '@coreui/react'
+import React, { useState, useEffect } from 'react'
+import axios from 'axios'
+import { CRow, CCol, CCard, CCardBody, CCardHeader, CSpinner, CProgress } from '@coreui/react'
 import { Link } from 'react-router-dom'
-import cardData from './dataKanagata'
 
 const Kanagata = () => {
+  const [machineNames, setMachineNames] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
   const getColors = (status) => {
     switch (status.toLowerCase()) {
       case 'running':
@@ -93,14 +97,67 @@ const Kanagata = () => {
     }
   }
 
+  useEffect(() => {
+    const fetchMachineNames = async () => {
+      try {
+        const token = localStorage.getItem('token')
+        const response = await axios.get('/api/machine-names', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+
+        const transformedData = response.data.map((machine) => ({
+          no_mesin: machine.Machine_Code || machine.LineName.split(':')[1] || machine.LineName,
+          mesin: machine.LineName,
+          message: 'Running',
+          Plan: 150,
+          actual: 140,
+          performance: '93%',
+        }))
+
+        console.log('Detail machine names:', transformedData)
+
+        setMachineNames(transformedData)
+        setLoading(false)
+      } catch (err) {
+        console.error('Fetch error:', err.response ? err.response.data : err.message)
+        setError(err)
+        setLoading(false)
+      }
+    }
+
+    fetchMachineNames()
+  }, [])
+
+  if (loading) {
+    return (
+      <CRow>
+        <CCol className="text-center">
+          <CSpinner color="primary" />
+        </CCol>
+      </CRow>
+    )
+  }
+
+  if (error) {
+    return (
+      <CRow>
+        <CCol className="text-center text-danger">
+          Error loading machine names: {error.message}
+        </CCol>
+      </CRow>
+    )
+  }
+
   return (
     <CRow className="d-flex align-items-stretch">
-      {cardData.map((data, index) => {
+      {machineNames.map((data, index) => {
         const { borderColor, headerColor, signal } = getColors(data.message)
         const progress = data.Plan > 0 ? (data.actual / data.Plan) * 100 : 0
 
         return (
-          <CCol md={2} sm={2} key={index}>
+          <CCol md={2} sm={2} className="mb-4 px-2" key={index}>
             <CCard
               className="mb-4"
               style={{
@@ -117,31 +174,58 @@ const Kanagata = () => {
                   height: '50px',
                   display: 'flex',
                   alignItems: 'center',
+                  justifyContent: 'center', // Tambahkan ini untuk membuat judul center
                   padding: '5px 10px',
                 }}
               >
                 <Link
-                  to={`/cikarang/machine/${encodeURIComponent(data.mesin)}`}
+                  to={`/cikarang/machine/${encodeURIComponent(data.no_mesin)}`}
                   style={{
                     color: 'white',
-                    textDecoration: 'underline',
+                    textDecoration: 'none',
                     cursor: 'pointer',
                     width: '100%',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
                     textTransform: 'uppercase',
+                    textAlign: 'center', // Tambahkan ini
                   }}
                 >
-                  {data.mesin}
+                  <strong style={{ fontSize: '0.9em' }}>{data.no_mesin}</strong>
+                  <span style={{ fontSize: '0.8em', opacity: 0.8 }}>{data.mesin}</span>
                 </Link>
               </CCardHeader>
-              <CCardBody style={{ padding: '10px' }}>
+              <CCardBody
+                style={{
+                  padding: '10px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'flex-start', // Ubah ke center untuk proposionalitas
+                  height: '100%',
+                  alignItems: 'center', // Tambahkan ini untuk perataan horizontal
+                  marginBottom: '-8%',
+                }}
+              >
                 <div
-                  style={{ textAlign: 'center', marginBottom: '5px', textTransform: 'uppercase' }}
+                  style={{
+                    textAlign: 'center',
+                    marginBottom: '10px',
+                    textTransform: 'uppercase',
+                    width: '100%', // Pastikan full width
+                  }}
                 >
                   <strong>{data.message}</strong>
                 </div>
-                <div style={{ display: 'flex', gap: '0' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: '0px',
+                    width: '100%', // Pastikan full width
+                    alignItems: 'center',
+                    justifyContent: 'center', // Tambahkan ini untuk perataan
+                  }}
+                >
                   <div
                     className="signal-tower"
                     style={{
@@ -149,7 +233,7 @@ const Kanagata = () => {
                       flexDirection: 'column',
                       justifyContent: 'space-between',
                       minWidth: '30px',
-                      height: '100px',
+                      height: '100%',
                     }}
                   >
                     {signal.map((signalClass, i) => (
@@ -157,15 +241,19 @@ const Kanagata = () => {
                         key={i}
                         className={`signal ${signalClass}`}
                         style={{
-                          height: '20px',
+                          flex: '1',
                           width: '30px',
                           borderRadius: '2px',
+                          minHeight: '25px',
                         }}
                       />
                     ))}
                   </div>
                   <div style={{ flex: 1 }}>
-                    <p style={{ margin: '0' }}>
+                    <p style={{ margin: '0 0 5px 0' }}>
+                      <strong>No. Mesin:</strong> {data.no_mesin}
+                    </p>
+                    <p style={{ margin: '0 0 5px 0' }}>
                       <strong>Plan:</strong> {data.Plan}
                     </p>
                     <div style={{ marginBottom: '5px' }}>

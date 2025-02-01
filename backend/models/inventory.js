@@ -1,3 +1,4 @@
+//backend/models/inventory.js
 const sql = require("mssql");
 
 // Fungsi untuk membuat item inventaris baru

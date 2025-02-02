@@ -1,173 +1,228 @@
-import React from 'react'
-import { CCard, CCardBody, CCardHeader, CCol, CRow, CCardText, CCardTitle } from '@coreui/react'
-import { Link } from 'react-router-dom'
+import React, { useState } from 'react'
+import {
+  CCard,
+  CCardBody,
+  CCardHeader,
+  CCol,
+  CRow,
+  CButton,
+  CButtonGroup,
+  CProgress,
+  CProgressStacked,
+  CPopover,
+} from '@coreui/react'
+import './karawang.css'
 
-const machines = [
+const machinesData = {
+  'Shift 1': [
+    {
+      name: '11003 MANUAL LATHE OKUMA',
+      actual: 150,
+      status: 'Normal Operation',
+      progressValues: [10],
+      progressValues2: [30],
+      progressValues3: [10],
+    },
+    {
+      name: 'EBW - DRILL CARRIER 23015-23017-23018',
+      actual: 50,
+      status: 'Stop Line',
+      progressValues: [20],
+      progressValues2: [20],
+      progressValues3: [20],
+    },
+    {
+      name: 'ASSY GEAR COMP PLANETARY 62030',
+      actual: 50,
+      status: 'Stop Line',
+      progressValues: [30],
+      progressValues2: [35],
+      progressValues3: [15],
+    },
+  ],
+  'Shift 2': [
+    {
+      name: '11003 MANUAL LATHE OKUMA',
+      actual: 100,
+      status: 'Stop Line',
+      progressValues: [20],
+      progressValues2: [10],
+      progressValues3: [30],
+    },
+    {
+      name: 'EBW - DRILL CARRIER 23015-23017-23018',
+      actual: 75,
+      status: 'Normal Operation',
+      progressValues: [30],
+      progressValues2: [10],
+      progressValues3: [30],
+    },
+    {
+      name: 'ASSY GEAR COMP PLANETARY 62030',
+      actual: 60,
+      status: 'Normal Operation',
+      progressValues: [50],
+      progressValues2: [5],
+      progressValues3: [5],
+    },
+  ],
+  'Shift 3': [
+    {
+      name: '11003 MANUAL LATHE OKUMA',
+      actual: 80,
+      status: 'Stop Line',
+      progressValues: [10],
+      progressValues2: [10],
+      progressValues3: [10],
+    },
+    {
+      name: 'EBW - DRILL CARRIER 23015-23017-23018',
+      actual: 65,
+      status: 'Normal Operation',
+      progressValues: [5],
+      progressValues2: [35],
+      progressValues3: [50],
+    },
+    {
+      name: 'ASSY GEAR COMP PLANETARY 62030',
+      actual: 55,
+      status: 'Stop Line',
+      progressValues: [25],
+      progressValues2: [5],
+      progressValues3: [30],
+    },
+  ],
+}
+
+const shifts = [
   {
-    machine: '11003 MANUAL LATHE OKUMA',
-    status: 'Running',
-    durasi: '32 menit 49 detik',
-    planning: 300,
-    actual: 10,
-    cycleTime: 60,
-    performa: '16%',
+    name: 'Shift 1',
+    hours: [
+      '07:00',
+      '08:00',
+      '09:00',
+      '10:00',
+      '11:00',
+      '12:00',
+      '13:00',
+      '14:00',
+      '15:00',
+      '16:00',
+    ],
   },
   {
-    machine: 'EBW - DRILL CARRIER 23015-23017-23018',
-    status: 'Stop',
-    durasi: '50 menit 10 detik',
-    planning: 200,
-    actual: 150,
-    cycleTime: 60,
-    performa: '90%',
+    name: 'Shift 2',
+    hours: [
+      '16:00',
+      '17:00',
+      '18:00',
+      '19:00',
+      '20:00',
+      '21:00',
+      '22:00',
+      '23:00',
+      '00:00',
+      '01:00',
+    ],
   },
   {
-    machine: 'MACH LINE-1 CASE M38 12257 - 12263',
-    status: 'Warning',
-    durasi: '10 menit 5 detik',
-    planning: 150,
-    actual: 100,
-    cycleTime: 60,
-    performa: '67%',
-  },
-  {
-    machine: 'LATHE LINE-03 GEAR SUN 12252',
-    status: 'Little Stop',
-    durasi: '20 menit 0 detik',
-    planning: 100,
-    actual: 50,
-    cycleTime: 60,
-    performa: '50%',
-  },
-  {
-    machine: 'ASSY GEAR COMP PLANETARY 62030',
-    status: 'Line Stop',
-    durasi: '15 menit 30 detik',
-    planning: 120,
-    actual: 30,
-    cycleTime: 60,
-    performa: '25%',
-  },
-  {
-    machine: 'ASSY END COMP TIE ROD 91043-91044',
-    status: 'Power Off',
-    durasi: '0 menit 0 detik',
-    planning: 0,
-    actual: 0,
-    cycleTime: 0,
-    performa: '0%',
+    name: 'Shift 3',
+    hours: ['01:00', '02:00', '03:00', '04:00', '05:00', '06:00', '07:00'],
   },
 ]
 
-const AllKarawang = () => {
-  const statusColors = {
-    running: 'var(--cui-success)',
-    stop: 'var(--cui-danger)',
-    warning: 'var(--cui-warning)',
-
-    'little stop': '#fc38da',
-    'line stop': '#C03FAB',
-    'power off': 'var(--cui-secondary)',
-  }
+const Cashting = () => {
+  const [selectedShift, setSelectedShift] = useState('Shift 1')
 
   return (
-    <CRow className="d-flex align-items-stretch">
-      {machines.map((item, index) => {
-        const borderClass =
-          item.status.toLowerCase() === 'running'
-            ? 'card-border-green'
-            : item.status.toLowerCase() === 'stop'
-              ? 'card-border-red'
-              : item.status.toLowerCase() === 'warning'
-                ? 'card-border-warning'
-                : item.status.toLowerCase() === 'little stop'
-                  ? 'card-border-pink'
-                  : item.status.toLowerCase() === 'line stop'
-                    ? 'card-border-purple'
-                    : item.status.toLowerCase() === 'power off'
-                      ? '' // Tidak ada kelas border untuk Power Off
-                      : '' // Menentukan kelas border berdasarkan status
+    <div>
+      <CRow>
+        <CCol md={12}>
+          <CCard className="mb-3">
+            <CCardHeader className="text-body d-flex justify-content-between align-items-center">
+              <div>
+                <h5 className="mb-0">Detail Mesin</h5>
+              </div>
+              <CButtonGroup role="group" aria-label="Shift Selection">
+                {shifts.map((shift) => (
+                  <CButton
+                    key={shift.name}
+                    color={selectedShift === shift.name ? 'primary' : 'outline-primary'}
+                    onClick={() => setSelectedShift(shift.name)}
+                  >
+                    {shift.name}
+                  </CButton>
+                ))}
+              </CButtonGroup>
+            </CCardHeader>
 
-        return (
-          <CCol md={2} sm={2} key={index}>
-            <CCard
-              textColor="white"
-              className={`mb-3 custom-card ${borderClass}`}
-              style={{
-                width: '100%',
-                height: '100%',
-                borderColor:
-                  item.status.toLowerCase() === 'power off'
-                    ? 'transparent'
-                    : statusColors[item.status.toLowerCase()],
-              }}
-            >
-              <CCardHeader
-                className="card-header-machine-status"
-                style={{
-                  backgroundColor:
-                    item.status.toLowerCase() === 'power off'
-                      ? statusColors['power off']
-                      : statusColors[item.status.toLowerCase()],
-                }}
-              >
-                <Link
-                  to={`/cikarang/machine/${encodeURIComponent(item.machine)}`}
-                  style={{
-                    color: item.status.toLowerCase() === 'power off' ? 'white' : 'white',
-                    textDecoration: 'underline',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {item.machine}
-                </Link>
-              </CCardHeader>
-              <CCardBody>
-                <CCardTitle
-                  className="machine-status-text"
-                  style={{ textAlign: 'center', textTransform: 'uppercase' }}
-                >
-                  {item.status}
-                </CCardTitle>
-                <CCardText className="machine-status-text">
-                  <div className="status-row">
-                    <div>
-                      <strong>Planning:</strong>
-                    </div>
-                    <div>{item.planning}</div>
-                  </div>
-                  <div className="status-row">
-                    <div>
-                      <strong>Actual:</strong>
-                    </div>
-                    <div>{item.actual}</div>
-                  </div>
-                  <div className="status-row">
-                    <div>
-                      <strong>Durasi:</strong>
-                    </div>
-                    <div>{item.durasi}</div>
-                  </div>
-                  <div className="status-row">
-                    <div>
-                      <strong>Performa:</strong>
-                    </div>
-                    <div>{item.performa}</div>
-                  </div>
-                  <div className="status-row">
-                    <div>
-                      <strong>Cycle Time:</strong>
-                    </div>
-                    <div>{item.cycleTime}</div>
-                  </div>
-                </CCardText>
-              </CCardBody>
-            </CCard>
-          </CCol>
-        )
-      })}
-    </CRow>
+            <CCardBody className="p-4">
+              <CRow>
+                <CCol md={12}>
+                  <table className="table table-bordered machine-status-table">
+                    <thead>
+                      <tr>
+                        <th className="text-center" style={{ width: '15%' }}>
+                          Mesin
+                        </th>
+                        <th className="text-center" style={{ width: '8%' }}>
+                          Actual
+                        </th>
+                        <th className="text-center" style={{ width: '8%' }}>
+                          Status
+                        </th>
+                        <th className="text-start" style={{ width: '70%' }}>
+                          {shifts.find((shift) => shift.name === selectedShift).hours.join(' | ')}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {machinesData[selectedShift].map((machine, machineIndex) => (
+                        <tr key={machineIndex}>
+                          <td className="text-center">{machine.name}</td>
+                          <td className="text-center">{machine.actual}</td>
+                          <td className="text-center">{machine.status}</td>
+                          <td className="padded-cell">
+                            <div className="grid-container">
+                              <div className="progress-container">
+                                <CProgressStacked>
+                                  <CPopover
+                                    content={`Value: ${machine.progressValues[0]}`}
+                                    placement="right"
+                                    trigger={['hover', 'focus']}
+                                  >
+                                    <CProgress color="success" value={machine.progressValues[0]} />
+                                  </CPopover>
+                                  <CPopover
+                                    content={`Value: ${machine.progressValues2[0]}`}
+                                    placement="right"
+                                    trigger={['hover', 'focus']}
+                                  >
+                                    <CProgress color="danger" value={machine.progressValues2[0]} />
+                                  </CPopover>
+                                  <CPopover
+                                    content={`Value: ${machine.progressValues3[0]}`}
+                                    placement="right"
+                                    trigger={['hover', 'focus']}
+                                  >
+                                    <CProgress color="warning" value={machine.progressValues3[0]} />
+                                  </CPopover>
+                                </CProgressStacked>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </CCol>
+              </CRow>
+            </CCardBody>
+          </CCard>
+        </CCol>
+      </CRow>
+    </div>
   )
 }
 
-export default AllKarawang
+export default Cashting

@@ -137,25 +137,6 @@ $white-color: #ffffff;
 
 .signal {
   width: 30px;
-}
-
-.signal-green {
-  background-color: green;
-}
-
-.signal-yellow {
-  background-color: yellow;
-}
-
-.signal-red {
-  background-color: red;
-}
-
-.card-header {
-  color: white;
-}
-.signal {
-  width: 30px;
   transition: background-color 0.3s;
 }
 
@@ -205,13 +186,16 @@ $white-color: #ffffff;
 .signal-dark-white {
   background-color: rgb(80, 80, 80); /* Darker gray */
 }
+
 .progress-stacked {
   height: 32px !important;
-}
-.progress-stacked .progress {
-  height: 32px !important;
-}
-.progress-stacked .progress-bar {
-  height: 32px !important;
-  font-size: 1rem !important;
+
+  .progress {
+    height: 32px !important;
+
+    .progress-bar {
+      height: 32px !important;
+      font-size: 1rem !important;
+    }
+  }
 }

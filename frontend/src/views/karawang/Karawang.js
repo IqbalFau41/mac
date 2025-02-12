@@ -14,7 +14,7 @@ import { Link } from 'react-router-dom'
 import { getStatusConfig, generateDefaultSignal } from '../../utils/signalLightConfig'
 import '../../scss/signalLightConfig.scss'
 
-const Kanagata = () => {
+const Karawang = () => {
   // We manage several pieces of state that work together to display our machine data
   const [machineNames, setMachineNames] = useState([]) // Holds our complete machine dataset
   const [lineGroups, setLineGroups] = useState([]) // Available manufacturing line groups
@@ -27,7 +27,7 @@ const Kanagata = () => {
   useEffect(() => {
     const fetchLineGroups = async () => {
       try {
-        const response = await axios.get('/api/machine-names/cikarang/line-groups')
+        const response = await axios.get('/api/machine-names/karawang/line-groups')
         setLineGroups(response.data.map((group) => group.LineGroup))
       } catch (err) {
         console.error('Error fetching line groups:', err)
@@ -47,7 +47,7 @@ const Kanagata = () => {
 
         // Make parallel API calls for machine names and status
         const [machineResponse, statusResponse] = await Promise.all([
-          axios.get('/api/machine-names/cikarang', params),
+          axios.get('/api/machine-names/karawang', params),
           axios.get('/api/machine-status/all'),
         ])
 
@@ -149,7 +149,7 @@ const Kanagata = () => {
                     className="machine-card-header"
                     style={{ backgroundColor: headerColor }}
                   >
-                    <Link to={`/cikarang/machine/${encodeURIComponent(data.no_mesin)}`}>
+                    <Link to={`/karawang/machine/${encodeURIComponent(data.no_mesin)}`}>
                       <strong className="machine-code">{data.no_mesin}</strong>
                       <span className="machine-name">{data.mesin}</span>
                     </Link>
@@ -215,4 +215,4 @@ const Kanagata = () => {
   )
 }
 
-export default Kanagata
+export default Karawang

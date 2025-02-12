@@ -48,7 +48,7 @@ export default defineConfig(() => {
       host: true,
       proxy: {
         '/api': {
-          target: 'http://localhost:8080', // Sesuaikan dengan port backend Anda
+          target: 'http://localhost:3000', // Sesuaikan dengan port backend Anda
           changeOrigin: true,
         },
       },

@@ -12,21 +12,22 @@ import {
 import CIcon from '@coreui/icons-react'
 
 import { AppSidebarNav } from './AppSidebarNav'
-
 import { logo } from 'src/assets/brand/logo'
 import { sygnet } from 'src/assets/brand/sygnet'
-
-// sidebar nav config
 import navigation from '../_nav'
 
 const AppSidebar = () => {
   const dispatch = useDispatch()
+  // Get both states from Redux
   const unfoldable = useSelector((state) => state.sidebarUnfoldable)
   const sidebarShow = useSelector((state) => state.sidebarShow)
 
+  // Create a combined className based on the unfoldable state
+  const sidebarClassName = `border-end ${unfoldable ? 'sidebar-narrow-unfoldable' : ''}`
+
   return (
     <CSidebar
-      className="border-end"
+      className={sidebarClassName}
       colorScheme="dark"
       position="fixed"
       unfoldable={unfoldable}
@@ -46,10 +47,17 @@ const AppSidebar = () => {
           onClick={() => dispatch({ type: 'set', sidebarShow: false })}
         />
       </CSidebarHeader>
+
       <AppSidebarNav items={navigation} />
+
       <CSidebarFooter className="border-top d-none d-lg-flex">
         <CSidebarToggler
-          onClick={() => dispatch({ type: 'set', sidebarUnfoldable: !unfoldable })}
+          onClick={() =>
+            dispatch({
+              type: 'set',
+              sidebarUnfoldable: !unfoldable,
+            })
+          }
         />
       </CSidebarFooter>
     </CSidebar>

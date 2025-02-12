@@ -14,7 +14,7 @@ import { Link } from 'react-router-dom'
 import { getStatusConfig, generateDefaultSignal } from '../../utils/signalLightConfig'
 import '../../scss/signalLightConfig.scss'
 
-const Kanagata = () => {
+const Cikarang = () => {
   // We manage several pieces of state that work together to display our machine data
   const [machineNames, setMachineNames] = useState([]) // Holds our complete machine dataset
   const [lineGroups, setLineGroups] = useState([]) // Available manufacturing line groups
@@ -149,7 +149,20 @@ const Kanagata = () => {
                     className="machine-card-header"
                     style={{ backgroundColor: headerColor }}
                   >
-                    <Link to={`/cikarang/machine/${encodeURIComponent(data.no_mesin)}`}>
+                    <Link
+                      to={`/cikarang/machine/${encodeURIComponent(data.no_mesin)}`}
+                      style={{
+                        color: 'white',
+                        textDecoration: 'none',
+                        cursor: 'pointer',
+                        width: '100%',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        textTransform: 'uppercase',
+                        textAlign: 'center',
+                      }}
+                    >
                       <strong className="machine-code">{data.no_mesin}</strong>
                       <span className="machine-name">{data.mesin}</span>
                     </Link>
@@ -215,4 +228,4 @@ const Kanagata = () => {
   )
 }
 
-export default Kanagata
+export default Cikarang

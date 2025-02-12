@@ -29,7 +29,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
-      const url = 'http://localhost:8080/api/auth/login' // Ganti dengan IP backend Anda
+      const url = 'http://localhost:3000/api/auth/login' // Ganti dengan IP backend Anda
       const response = await axios.post(url, data)
 
       // Pastikan backend mengembalikan token

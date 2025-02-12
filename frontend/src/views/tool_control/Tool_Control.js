@@ -1,145 +1,104 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
-import { CRow, CCol, CCard, CCardBody, CCardHeader, CSpinner, CProgress } from '@coreui/react'
+import {
+  CRow,
+  CCol,
+  CCard,
+  CCardBody,
+  CCardHeader,
+  CSpinner,
+  CProgress,
+  CFormSelect,
+} from '@coreui/react'
 import { Link } from 'react-router-dom'
+import { getStatusConfig, generateDefaultSignal } from '../../utils/signalLightConfig'
+import '../../scss/signalLightConfig.scss'
 
-const Tool_Control = () => {
-  const [machineNames, setMachineNames] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+const Kanagata = () => {
+  // We manage several pieces of state that work together to display our machine data
+  const [machineNames, setMachineNames] = useState([]) // Holds our complete machine dataset
+  const [lineGroups, setLineGroups] = useState([]) // Available manufacturing line groups
+  const [selectedLineGroup, setSelectedLineGroup] = useState('') // Currently selected group filter
+  const [loading, setLoading] = useState(true) // Controls loading state display
+  const [error, setError] = useState(null) // Handles any API or processing errors
 
-  const getColors = (status) => {
-    switch (status.toLowerCase()) {
-      case 'running':
-        return {
-          borderColor: 'var(--cui-success)',
-          headerColor: 'var(--cui-success)',
-          signal: [
-            'signal-dark-red',
-            'signal-dark-yellow',
-            'signal-green',
-            'signal-dark-blue',
-            'signal-dark-white',
-          ],
-        }
-      case 'warning':
-        return {
-          borderColor: 'var(--cui-warning)',
-          headerColor: 'var(--cui-warning)',
-          signal: [
-            'signal-dark-red',
-            'signal-yellow',
-            'signal-dark-green',
-            'signal-dark-blue',
-            'signal-dark-white',
-          ],
-        }
-      case 'stop':
-        return {
-          borderColor: 'var(--cui-danger)',
-          headerColor: 'var(--cui-danger)',
-          signal: [
-            'signal-red',
-            'signal-dark-yellow',
-            'signal-dark-green',
-            'signal-dark-blue',
-            'signal-dark-white',
-          ],
-        }
-      case 'little stop':
-        return {
-          borderColor: '#fc38da',
-          headerColor: '#fc38da',
-          signal: [
-            'signal-dark-red',
-            'signal-dark-yellow',
-            'signal-dark-green',
-            'signal-blue',
-            'signal-dark-white',
-          ],
-        }
-      case 'line stop':
-        return {
-          borderColor: '#c03fab',
-          headerColor: '#c03fab',
-          signal: [
-            'signal-dark-green',
-            'signal-dark-yellow',
-            'signal-dark-red',
-            'signal-blue',
-            'signal-dark-white',
-          ],
-        }
-      case 'power off':
-        return {
-          borderColor: 'var(--cui-secondary)',
-          headerColor: 'var(--cui-secondary)',
-          signal: [
-            'signal-dark-green',
-            'signal-dark-yellow',
-            'signal-dark-red',
-            'signal-dark-blue',
-            'signal-white',
-          ],
-        }
-      default:
-        return {
-          borderColor: '#000',
-          headerColor: '#000',
-          signal: [
-            'signal-dark-green',
-            'signal-dark-yellow',
-            'signal-dark-red',
-            'signal-dark-blue',
-            'signal-dark-white',
-          ],
-        }
+  // When the component first mounts, we fetch the available line groups
+  // This populates our filter dropdown menu
+  useEffect(() => {
+    const fetchLineGroups = async () => {
+      try {
+        const response = await axios.get('/api/machine-names/karawang/line-groups')
+        setLineGroups(response.data.map((group) => group.LineGroup))
+      } catch (err) {
+        console.error('Error fetching line groups:', err)
+      }
     }
-  }
 
+    fetchLineGroups()
+  }, [])
+
+  // This effect handles our main data fetching logic
+  // It runs initially and whenever the selected line group changes
   useEffect(() => {
     const fetchMachineNames = async () => {
       try {
-        const token = localStorage.getItem('token')
-        const response = await axios.get('/api/machine-names', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        setLoading(true)
+        const params = selectedLineGroup ? { params: { lineGroup: selectedLineGroup } } : {}
+
+        // Make parallel API calls for machine names and status
+        const [machineResponse, statusResponse] = await Promise.all([
+          axios.get('/api/machine-names/karawang', params),
+          axios.get('/api/machine-status/all'),
+        ])
+
+        // Create our status lookup table for efficient access
+        const machineStatuses = statusResponse.data.reduce((acc, status) => {
+          acc[status.NoMachine] = status
+          return acc
+        }, {})
+
+        // Transform the raw data into our display format
+        const transformedData = machineResponse.data.map((machine) => {
+          const machineStatus = machineStatuses[machine.Machine_Code] || {}
+          const statusConfig = getStatusConfig(machineStatus.Status || 'Shutdown')
+
+          // Calculate our performance metrics
+          const actual = machineStatus.Counter || 0
+          const plan = machineStatus.TotalCounter || 100
+          const performance = plan > 0 ? Math.round((actual / plan) * 100) : 0
+
+          return {
+            no_mesin: machine.Machine_Code,
+            mesin: machine.LineName,
+            lineGroup: machine.LineGroup,
+            status: machineStatus.Status || 'Shutdown',
+            message: statusConfig.displayName,
+            Plan: plan,
+            actual: actual,
+            performance: `${performance}%`,
+            startTime: machineStatus.StartDate_Time,
+            endTime: machineStatus.EndDate_Time,
+            cycleTime: machineStatus.CT,
+          }
         })
-
-        const transformedData = response.data.map((machine) => ({
-          no_mesin: machine.Machine_Code || machine.LineName.split(':')[1] || machine.LineName,
-          mesin: machine.LineName,
-          message: 'Running',
-          Plan: 150,
-          actual: 140,
-          performance: '93%',
-        }))
-
-        console.log('Detail machine names:', transformedData)
 
         setMachineNames(transformedData)
         setLoading(false)
       } catch (err) {
-        console.error('Fetch error:', err.response ? err.response.data : err.message)
+        console.error('Error fetching machine data:', err)
         setError(err)
         setLoading(false)
       }
     }
 
+    // Single fetch when component mounts or lineGroup changes
     fetchMachineNames()
-  }, [])
 
-  if (loading) {
-    return (
-      <CRow>
-        <CCol className="text-center">
-          <CSpinner color="primary" />
-        </CCol>
-      </CRow>
-    )
-  }
+    // Remove the interval-based refresh
+    // No need for cleanup since we're not setting up an interval anymore
+  }, [selectedLineGroup])
 
+  // Display error state if something goes wrong
   if (error) {
     return (
       <CRow>
@@ -151,131 +110,109 @@ const Tool_Control = () => {
   }
 
   return (
-    <CRow className="d-flex align-items-stretch">
-      {machineNames.map((data, index) => {
-        const { borderColor, headerColor, signal } = getColors(data.message)
-        const progress = data.Plan > 0 ? (data.actual / data.Plan) * 100 : 0
+    <>
+      {/* Line Group Filter Section */}
+      <CRow className="mb-3">
+        <CCol md={4}>
+          <CFormSelect
+            value={selectedLineGroup}
+            onChange={(e) => setSelectedLineGroup(e.target.value)}
+          >
+            <option value="">All Line Groups</option>
+            {lineGroups.map((group, index) => (
+              <option key={index} value={group}>
+                {group}
+              </option>
+            ))}
+          </CFormSelect>
+        </CCol>
+      </CRow>
 
-        return (
-          <CCol md={2} sm={2} className="mb-4 px-2" key={index}>
-            <CCard
-              className="mb-4"
-              style={{
-                borderColor: borderColor,
-                borderWidth: '1px',
-                borderStyle: 'solid',
-                height: '100%',
-              }}
-            >
-              <CCardHeader
-                style={{
-                  backgroundColor: headerColor,
-                  color: 'white',
-                  height: '50px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center', // Tambahkan ini untuk membuat judul center
-                  padding: '5px 10px',
-                }}
-              >
-                <Link
-                  to={`/cikarang/machine/${encodeURIComponent(data.no_mesin)}`}
-                  style={{
-                    color: 'white',
-                    textDecoration: 'none',
-                    cursor: 'pointer',
-                    width: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    textTransform: 'uppercase',
-                    textAlign: 'center', // Tambahkan ini
-                  }}
-                >
-                  <strong style={{ fontSize: '0.9em' }}>{data.no_mesin}</strong>
-                  <span style={{ fontSize: '0.8em', opacity: 0.8 }}>{data.mesin}</span>
-                </Link>
-              </CCardHeader>
-              <CCardBody
-                style={{
-                  padding: '10px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'flex-start', // Ubah ke center untuk proposionalitas
-                  height: '100%',
-                  alignItems: 'center', // Tambahkan ini untuk perataan horizontal
-                  marginBottom: '-8%',
-                }}
-              >
-                <div
-                  style={{
-                    textAlign: 'center',
-                    marginBottom: '10px',
-                    textTransform: 'uppercase',
-                    width: '100%', // Pastikan full width
-                  }}
-                >
-                  <strong>{data.message}</strong>
-                </div>
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: '0px',
-                    width: '100%', // Pastikan full width
-                    alignItems: 'center',
-                    justifyContent: 'center', // Tambahkan ini untuk perataan
-                  }}
-                >
-                  <div
-                    className="signal-tower"
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between',
-                      minWidth: '30px',
-                      height: '100%',
-                    }}
-                  >
-                    {signal.map((signalClass, i) => (
-                      <div
-                        key={i}
-                        className={`signal ${signalClass}`}
-                        style={{
-                          flex: '1',
-                          width: '30px',
-                          borderRadius: '2px',
-                          minHeight: '25px',
-                        }}
-                      />
-                    ))}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ margin: '0 0 5px 0' }}>
-                      <strong>No. Mesin:</strong> {data.no_mesin}
-                    </p>
-                    <p style={{ margin: '0 0 5px 0' }}>
-                      <strong>Plan:</strong> {data.Plan}
-                    </p>
-                    <div style={{ marginBottom: '5px' }}>
-                      <strong>Actual:</strong> {data.actual}
-                      <CProgress height={10} value={progress} />
-                    </div>
-                    <div>
-                      <strong>Performance:</strong> {data.performance}
-                      <CProgress
-                        height={10}
-                        value={parseFloat(data.performance.replace('%', ''))}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </CCardBody>
-            </CCard>
+      {/* Main Content Area */}
+      {loading ? (
+        <CRow>
+          <CCol className="text-center">
+            <CSpinner color="primary" />
           </CCol>
-        )
-      })}
-    </CRow>
+        </CRow>
+      ) : (
+        <CRow className="d-flex align-items-stretch">
+          {machineNames.map((data, index) => {
+            const { borderColor, headerColor } = getStatusConfig(data.status)
+            const signalClasses = generateDefaultSignal(data.status)
+            const progress = data.actual ? Math.min((data.actual / (data.Plan || 1)) * 100, 100) : 0
+
+            return (
+              <CCol md={2} sm={2} className="mb-4 px-2" key={index}>
+                <CCard className="machine-card-wrapper mb-4" style={{ borderColor }}>
+                  <CCardHeader
+                    className="machine-card-header"
+                    style={{ backgroundColor: headerColor }}
+                  >
+                    <Link to={`/karawang/machine/${encodeURIComponent(data.no_mesin)}`}>
+                      <strong className="machine-code">{data.no_mesin}</strong>
+                      <span className="machine-name">{data.mesin}</span>
+                    </Link>
+                  </CCardHeader>
+
+                  <CCardBody className="machine-card-body">
+                    <div className="status-message">
+                      <strong
+                        title={
+                          data.startTime
+                            ? `Last updated: ${new Date(data.startTime).toLocaleString()}`
+                            : ''
+                        }
+                      >
+                        {data.message}
+                      </strong>
+                    </div>
+
+                    <div className="machine-info-container">
+                      <div className="signal-tower">
+                        {signalClasses.map((signalClass, i) => {
+                          // Check if it's Normal Operation and this is the green light (index 2)
+                          const isGreenLight = i === 2
+                          const isNormalOperation = data.status.toLowerCase() === 'normal operation'
+
+                          return (
+                            <div
+                              key={i}
+                              className={`signal ${signalClass} ${isNormalOperation && isGreenLight ? 'blinking' : ''}`}
+                            />
+                          )
+                        })}
+                      </div>
+
+                      <div className="machine-details">
+                        <p>
+                          <strong>No. Mesin:</strong> {data.no_mesin}
+                        </p>
+                        <p>
+                          <strong>Plan:</strong> {data.Plan}
+                        </p>
+                        <div className="metric-container">
+                          <strong>Actual:</strong> {data.actual}
+                          <CProgress height={10} value={progress} />
+                        </div>
+                        <div className="metric-container">
+                          <strong>Performance:</strong> {data.performance}
+                          <CProgress
+                            height={10}
+                            value={parseFloat(data.performance.replace('%', ''))}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </CCardBody>
+                </CCard>
+              </CCol>
+            )
+          })}
+        </CRow>
+      )}
+    </>
   )
 }
 
-export default Tool_Control
+export default Kanagata

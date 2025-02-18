@@ -53,6 +53,7 @@ router.get("/:location", async (req, res) => {
 });
 
 // Get line groups for CKR or KRW
+// Get line groups for CKR or KRW
 router.get("/:location/line-groups", async (req, res) => {
   try {
     const { location } = req.params;

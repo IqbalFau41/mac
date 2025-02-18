@@ -11,7 +11,7 @@ const generateAuthToken = (userId) => {
 // Fungsi untuk memvalidasi data login
 const validateLogin = (data) => {
   const schema = Joi.object({
-    Nrp: Joi.string().required().label("Nrp"),
+    nrp: Joi.string().required().label("NRP"), // Changed from 'nrp' to 'nrp'
     email: Joi.string().required().email().label("Email"),
   });
   return schema.validate(data);
@@ -22,16 +22,27 @@ const login = async (data) => {
   const { error } = validateLogin(data);
   if (error) throw new Error(error.details[0].message);
 
-  const { Nrp, email } = data;
+  // Normalize the input to uppercase
+  const NRP = data.nrp.toUpperCase();
+  const EMAIL = data.email.toLowerCase();
 
   try {
-    const result =
-      await sql.query`SELECT * FROM Users WHERE Nrp = ${Nrp} AND email = ${email}`;
+    const result = await sql.query`
+      SELECT * FROM [DEPT_MANUFACTURING].[dbo].[USER_NAME] 
+      WHERE NRP = ${NRP} AND EMAIL = ${EMAIL}
+    `;
     const user = result.recordset[0];
 
-    if (!user) throw new Error("User  not found");
+    if (!user) throw new Error("User not found");
 
-    const token = generateAuthToken(user.Id);
+    // Update LastLogin timestamp
+    await sql.query`
+      UPDATE [DEPT_MANUFACTURING].[dbo].[USER_NAME] 
+      SET LastLogin = GETDATE() 
+      WHERE NRP = ${NRP}
+    `;
+
+    const token = generateAuthToken(user.NRP);
     return { token, user };
   } catch (error) {
     console.error("Error during login:", error.message);

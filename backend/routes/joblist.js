@@ -2,33 +2,22 @@ const express = require("express");
 const router = express.Router();
 const sql = require("mssql");
 
-// Middleware for validating ID
-const validateId = (req, res, next) => {
-  const { id } = req.params;
-  if (!id || isNaN(parseInt(id))) {
-    return res.status(400).json({ error: "Valid ID is required" });
-  }
-  next();
-};
-
-// Middleware for validating body
-const validateBody = (req, res, next) => {
-  const { nqp, nama_job } = req.body;
-
-  if (!nqp || !nama_job) {
-    return res.status(400).json({
-      error: "NQP and Job Name are required",
-    });
-  }
-  next();
-};
-
 // GET all job list items
 router.get("/", async (req, res) => {
   try {
     const result = await sql.query`
-      SELECT * FROM member_joblist
-      ORDER BY no_part DESC
+      SELECT TOP (1000) 
+        NRP,
+        NAME,
+        JOB_CLASS,
+        JOB_DESC,
+        FACTORY,
+        DUE_DATE,
+        STATUS,
+        created_at,
+        updated_at
+      FROM [DEPT_MANUFACTURING].[dbo].[USER_JOBLIST]
+      ORDER BY created_at DESC
     `;
     res.status(200).json(result.recordset);
   } catch (error) {
@@ -40,14 +29,23 @@ router.get("/", async (req, res) => {
   }
 });
 
-// GET single job list item by ID
-router.get("/:id", validateId, async (req, res) => {
-  const { id } = req.params;
+// GET single job list item by NRP
+router.get("/:NRP", async (req, res) => {
+  const { NRP } = req.params;
   try {
     const result = await sql.query`
-      SELECT *
-      FROM member_joblist 
-      WHERE no_part = ${id}
+      SELECT 
+        NRP,
+        NAME,
+        JOB_CLASS,
+        JOB_DESC,
+        FACTORY,
+        DUE_DATE,
+        STATUS,
+        created_at,
+        updated_at
+      FROM [DEPT_MANUFACTURING].[dbo].[USER_JOBLIST] 
+      WHERE NRP = ${NRP}
     `;
 
     if (result.recordset.length === 0) {
@@ -65,29 +63,32 @@ router.get("/:id", validateId, async (req, res) => {
 });
 
 // Create new job list item
-router.post("/", validateBody, async (req, res) => {
+router.post("/", async (req, res) => {
+  const { NRP, NAME, JOB_CLASS, JOB_DESC, FACTORY, DUE_DATE, STATUS } =
+    req.body;
+
   try {
     await sql.query`
-      INSERT INTO member_joblist (
-        nqp, 
-        nama_job, 
-        job_class, 
-        sub_section, 
-        factory, 
-        job_des, 
-        update_job, 
-        due_date, 
-        status
+      INSERT INTO [DEPT_MANUFACTURING].[dbo].[USER_JOBLIST] (
+        NRP, 
+        NAME, 
+        JOB_CLASS, 
+        JOB_DESC, 
+        FACTORY, 
+        DUE_DATE, 
+        STATUS,
+        created_at,
+        updated_at
       ) VALUES (
-        ${req.body.nqp}, 
-        ${req.body.nama_job}, 
-        ${req.body.job_class || null}, 
-        ${req.body.sub_section || null}, 
-        ${req.body.factory || null}, 
-        ${req.body.job_des || null}, 
-        ${req.body.update_job || null}, 
-        ${req.body.due_date || null}, 
-        ${req.body.status || null}
+        ${NRP}, 
+        ${NAME}, 
+        ${JOB_CLASS || null}, 
+        ${JOB_DESC || null}, 
+        ${FACTORY || null}, 
+        ${DUE_DATE || null}, 
+        ${STATUS || null},
+        GETDATE(),
+        GETDATE()
       )
     `;
     res.status(201).json({ message: "Job list item created successfully" });
@@ -101,12 +102,13 @@ router.post("/", validateBody, async (req, res) => {
 });
 
 // Update job list item
-router.put("/:id", validateId, validateBody, async (req, res) => {
-  const { id } = req.params;
+router.put("/:NRP", async (req, res) => {
+  const { NRP } = req.params;
+  const { NAME, JOB_CLASS, JOB_DESC, FACTORY, DUE_DATE, STATUS } = req.body;
 
   try {
     const checkItem = await sql.query`
-      SELECT no_part FROM member_joblist WHERE no_part = ${id}
+      SELECT NRP FROM [DEPT_MANUFACTURING].[dbo].[USER_JOBLIST] WHERE NRP = ${NRP}
     `;
 
     if (checkItem.recordset.length === 0) {
@@ -114,18 +116,16 @@ router.put("/:id", validateId, validateBody, async (req, res) => {
     }
 
     await sql.query`
-      UPDATE member_joblist 
+      UPDATE [DEPT_MANUFACTURING].[dbo].[USER_JOBLIST] 
       SET 
-        nqp = ${req.body.nqp}, 
-        nama_job = ${req.body.nama_job}, 
-        job_class = ${req.body.job_class || null}, 
-        sub_section = ${req.body.sub_section || null}, 
-        factory = ${req.body.factory || null}, 
-        job_des = ${req.body.job_des || null}, 
-        update_job = ${req.body.update_job || null}, 
-        due_date = ${req.body.due_date || null}, 
-        status = ${req.body.status || null}
-      WHERE no_part = ${id}
+        NAME = ${NAME}, 
+        JOB_CLASS = ${JOB_CLASS || null}, 
+        JOB_DESC = ${JOB_DESC || null}, 
+        FACTORY = ${FACTORY || null}, 
+        DUE_DATE = ${DUE_DATE || null}, 
+        STATUS = ${STATUS || null},
+        updated_at = GETDATE()
+      WHERE NRP = ${NRP}
     `;
     res.status(200).json({ message: "Job list item updated successfully" });
   } catch (error) {
@@ -138,12 +138,12 @@ router.put("/:id", validateId, validateBody, async (req, res) => {
 });
 
 // Delete job list item
-router.delete("/:id", validateId, async (req, res) => {
-  const { id } = req.params;
+router.delete("/:NRP", async (req, res) => {
+  const { NRP } = req.params;
 
   try {
     const checkItem = await sql.query`
-      SELECT no_part FROM member_joblist WHERE no_part = ${id}
+      SELECT NRP FROM [DEPT_MANUFACTURING].[dbo].[USER_JOBLIST] WHERE NRP = ${NRP}
     `;
 
     if (checkItem.recordset.length === 0) {
@@ -151,7 +151,7 @@ router.delete("/:id", validateId, async (req, res) => {
     }
 
     await sql.query`
-      DELETE FROM member_joblist WHERE no_part = ${id}
+      DELETE FROM [DEPT_MANUFACTURING].[dbo].[USER_JOBLIST] WHERE NRP = ${NRP}
     `;
     res.status(200).json({ message: "Job list item deleted successfully" });
   } catch (error) {

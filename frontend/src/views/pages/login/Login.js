@@ -19,7 +19,7 @@ import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser } from '@coreui/icons'
 
 const Login = () => {
-  const [data, setData] = useState({ Nrp: '', email: '' })
+  const [data, setData] = useState({ nrp: '', email: '' })
   const [error, setError] = useState('')
   const navigate = useNavigate() // Hook to programmatically navigate
 
@@ -78,9 +78,9 @@ const Login = () => {
                       <CFormInput
                         type="Password"
                         placeholder="Password"
-                        name="Nrp"
+                        name="nrp"
                         onChange={handleChange}
-                        value={data.Nrp}
+                        value={data.nrp}
                         required
                       />
                     </CInputGroup>

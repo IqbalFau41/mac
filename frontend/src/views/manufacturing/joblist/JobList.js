@@ -34,7 +34,7 @@ const JobList = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
-  const [sortOrder, setSortOrder] = useState({ column: 'job_des', direction: 'asc' })
+  const [sortOrder, setSortOrder] = useState({ column: 'NAME', direction: 'asc' })
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(50)
   const [completeItem, setCompleteItem] = useState(null)
@@ -61,8 +61,8 @@ const JobList = () => {
   }, [])
 
   // Navigation handler for updating jobs
-  const handleUpdate = (id) => {
-    navigate(`/manufacturing/job-list/update/${id}`)
+  const handleUpdate = (NRP) => {
+    navigate(`/manufacturing/job-list/update/${NRP}`)
   }
 
   // Sorting handler for table columns
@@ -76,9 +76,7 @@ const JobList = () => {
     if (!completeItem) return
 
     try {
-      await axios.post(
-        `http://localhost:3000/api/job-history/move-to-history/${completeItem.no_part}`,
-      )
+      await axios.post(`http://localhost:3000/api/job-history/move-to-history/${completeItem.NRP}`)
       fetchJobs() // Refresh the job list
       setCompleteItem(null)
     } catch (error) {
@@ -101,7 +99,7 @@ const JobList = () => {
   const sortedAndFilteredJobs = React.useMemo(() => {
     // First, filter the jobs based on search term
     const filtered = jobs.filter((item) =>
-      item.job_des.toLowerCase().includes(searchTerm.toLowerCase()),
+      item.NAME.toLowerCase().includes(searchTerm.toLowerCase()),
     )
 
     // Then sort the filtered results
@@ -156,7 +154,7 @@ const JobList = () => {
             <div className="search-container">
               <CFormInput
                 type="text"
-                placeholder="Cari berdasarkan deskripsi pekerjaan..."
+                placeholder="Cari berdasarkan nama..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="search-input"
@@ -167,42 +165,40 @@ const JobList = () => {
 
           <CCardBody>
             <div className="fixed-header">
-              <TableHeader column="nqp">NQP</TableHeader>
-              <TableHeader column="nama_job">Nama Job</TableHeader>
-              <TableHeader column="job_class">Job Class</TableHeader>
-              <TableHeader column="sub_section">Sub Section</TableHeader>
-              <TableHeader column="factory">Factory</TableHeader>
-              <TableHeader column="job_des">Job Description</TableHeader>
-              <TableHeader column="update_job">Update Job</TableHeader>
-              <TableHeader column="due_date">Due Date</TableHeader>
-              <TableHeader column="status">Status</TableHeader>
-              <div className="fixed-header-cell">Action</div>
+              <TableHeader column="NRP">NRP</TableHeader>
+              <TableHeader column="NAME">Nama</TableHeader>
+              <TableHeader column="JOB_CLASS">Job Class</TableHeader>
+              <TableHeader column="JOB_DESC">Deskripsi Pekerjaan</TableHeader>
+              <TableHeader column="FACTORY">Pabrik</TableHeader>
+              <TableHeader column="DUE_DATE">Tanggal Jatuh Tempo</TableHeader>
+              <TableHeader column="STATUS">Status</TableHeader>
+              <TableHeader column="created_at">Dibuat Pada</TableHeader>
+              <div className="fixed-header-cell">Aksi</div>
             </div>
 
             <div className="table-container">
               <CTable striped hover responsive className="responsive-table">
                 <CTableBody>
                   {currentItems.map((job) => (
-                    <CTableRow key={job.no_part}>
-                      <CTableDataCell>{job.nqp}</CTableDataCell>
-                      <CTableDataCell>{job.nama_job}</CTableDataCell>
-                      <CTableDataCell>{job.job_class}</CTableDataCell>
-                      <CTableDataCell>{job.sub_section}</CTableDataCell>
-                      <CTableDataCell>{job.factory}</CTableDataCell>
-                      <CTableDataCell>{job.job_des}</CTableDataCell>
-                      <CTableDataCell>{formatDate(job.update_job)}</CTableDataCell>
-                      <CTableDataCell>{formatDate(job.due_date)}</CTableDataCell>
+                    <CTableRow key={job.NRP}>
+                      <CTableDataCell>{job.NRP}</CTableDataCell>
+                      <CTableDataCell>{job.NAME}</CTableDataCell>
+                      <CTableDataCell>{job.JOB_CLASS}</CTableDataCell>
+                      <CTableDataCell>{job.JOB_DESC}</CTableDataCell>
+                      <CTableDataCell>{job.FACTORY}</CTableDataCell>
+                      <CTableDataCell>{formatDate(job.DUE_DATE)}</CTableDataCell>
                       <CTableDataCell>
-                        <span className={`status-badge status-${job.status.toLowerCase()}`}>
-                          {job.status}
+                        <span className={`status-badge status-${job.STATUS.toLowerCase()}`}>
+                          {job.STATUS}
                         </span>
                       </CTableDataCell>
+                      <CTableDataCell>{formatDate(job.created_at)}</CTableDataCell>
                       <CTableDataCell>
                         <CButton
                           color="warning"
                           size="sm"
                           className="me-2"
-                          onClick={() => handleUpdate(job.no_part)}
+                          onClick={() => handleUpdate(job.NRP)}
                           title="Edit"
                         >
                           <CIcon icon={cilPen} />
@@ -257,9 +253,11 @@ const JobList = () => {
           <CModalBody>
             Apakah Anda yakin pekerjaan ini telah selesai:
             <br />
-            <strong>NQP: {completeItem?.nqp}</strong>
+            <strong>NRP: {completeItem?.NRP}</strong>
             <br />
-            <strong>Deskripsi Pekerjaan: {completeItem?.job_des}</strong>
+            <strong>Nama: {completeItem?.NAME}</strong>
+            <br />
+            <strong>Deskripsi Pekerjaan: {completeItem?.JOB_DESC}</strong>
           </CModalBody>
           <CModalFooter>
             <CButton color="secondary" onClick={() => setCompleteItem(null)}>

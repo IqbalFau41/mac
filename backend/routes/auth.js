@@ -9,12 +9,11 @@ router.post("/login", async (req, res) => {
     res.status(200).send({ token, message: "Logged in successfully", user });
   } catch (error) {
     console.error("Error during login:", error);
-    if (error.message === "User  not found") {
-      return res.status(401).send({ message: "Invalid Nrp or email" });
+    if (error.message === "User not found") {
+      return res.status(401).send({ message: "Invalid NRP or Email" });
     }
     res.status(500).send({ message: "Internal Server Error" });
   }
 });
 
-// Ekspor router
 module.exports = router;

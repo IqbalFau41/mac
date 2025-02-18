@@ -3,33 +3,78 @@ const express = require("express");
 const router = express.Router();
 const sql = require("mssql");
 
-// This route gets the current status of a specific machine
-router.get("/current/:machineCode", async (req, res) => {
-  try {
-    const { machineCode } = req.params;
+// Helper function untuk membuat koneksi database
+const getDatabase = (location) => {
+  return location === "CKR" ? global.databases.iotHub : null;
+};
 
-    // Query to get the most recent status for a specific machine
+// Get current status of all machines
+router.get("/all/:location", async (req, res) => {
+  try {
+    const { location } = req.params;
+    const database = getDatabase(location);
+
+    if (!database) {
+      return res.status(400).json({
+        message: "Invalid location. Use 'CKR' or 'KRW'.",
+      });
+    }
+
     const query = `
-      SELECT TOP 1
-        [Id],
-        [NoMachine],
-        [Status],
-        [Color],
-        [StartDate_Time],
-        [EndDate_Time],
-        [Product],
-        [CT],
-        [Counter],
-        [TotalCounter]
-      FROM [PLCDATA_CKR].[dbo].[TestGoogleChart]
-      WHERE [NoMachine] = @machineCode
-        AND [FlgCutOff] = 0
-      ORDER BY [StartDate_Time] DESC
+      SELECT 
+        [MACHINE_CODE] as NoMachine,
+        [STATUS] as Status,
+        [MACHINE_NAME] as MachineName
+      FROM [dbo].[CODE_MACHINE_PRODUCTION]
+      WHERE [LOCATION] = @location
     `;
 
-    const result = await sql.query(query, {
-      machineCode,
+    const request = database.request();
+    request.input("location", sql.VarChar, location);
+
+    const result = await request.query(query);
+    res.status(200).json(result.recordset);
+  } catch (error) {
+    console.error("Error fetching all machine statuses:", error);
+    res.status(500).json({
+      message: "Internal Server Error",
+      error: error.toString(),
     });
+  }
+});
+
+// Get current status of a specific machine
+router.get("/current/:location/:machineCode", async (req, res) => {
+  try {
+    const { location, machineCode } = req.params;
+    const database = getDatabase(location);
+
+    if (!database) {
+      return res.status(400).json({
+        message: "Invalid location. Use 'CKR' or 'KRW'.",
+      });
+    }
+
+    const query = `
+      SELECT TOP 1
+        [MACHINE_CODE] as NoMachine,
+        [MACHINE_NAME] as MachineName,
+        [STATUS] as Status,
+        [LINE_GROUP] as LineGroup,
+        [FACTORY] as Factory,
+        [IP_ADDRESS] as IpAddress,
+        [CreatedAt] as CreatedAt,
+        [UpdatedAt] as UpdatedAt
+      FROM [dbo].[CODE_MACHINE_PRODUCTION]
+      WHERE [LOCATION] = @location 
+        AND [MACHINE_CODE] = @machineCode
+    `;
+
+    const request = database.request();
+    request.input("location", sql.VarChar, location);
+    request.input("machineCode", sql.VarChar, machineCode);
+
+    const result = await request.query(query);
 
     if (result.recordset.length === 0) {
       return res.status(404).json({
@@ -47,107 +92,34 @@ router.get("/current/:machineCode", async (req, res) => {
   }
 });
 
-// This route gets the status history of a machine for a specific date range
-router.get("/history/:machineCode", async (req, res) => {
+// Performance route (placeholder)
+router.get("/performance/:location/:machineCode", async (req, res) => {
   try {
-    const { machineCode } = req.params;
-    const { startDate, endDate } = req.query;
+    const { location, machineCode } = req.params;
+    const database = getDatabase(location);
 
-    // Query to get status history within a date range
+    if (!database) {
+      return res.status(400).json({
+        message: "Invalid location. Use 'CKR' or 'KRW'.",
+      });
+    }
+
+    // Placeholder for performance metrics
     const query = `
       SELECT 
-        [Id],
-        [NoMachine],
-        [Status],
-        [Color],
-        [StartDate_Time],
-        [EndDate_Time],
-        [Product],
-        [CT],
-        [Counter],
-        [TotalCounter]
-      FROM [PLCDATA_CKR].[dbo].[TestGoogleChart]
-      WHERE [NoMachine] = @machineCode
-        AND [StartDate_Time] BETWEEN @startDate AND @endDate
-      ORDER BY [StartDate_Time] DESC
+        [MACHINE_CODE] as NoMachine,
+        [STATUS] as Status,
+        [LINE_GROUP] as LineGroup
+      FROM [dbo].[CODE_MACHINE_PRODUCTION]
+      WHERE [LOCATION] = @location 
+        AND [MACHINE_CODE] = @machineCode
     `;
 
-    const result = await sql.query(query, {
-      machineCode,
-      startDate: startDate || new Date(new Date().setHours(0, 0, 0, 0)), // Default to start of current day
-      endDate: endDate || new Date(), // Default to current time
-    });
+    const request = database.request();
+    request.input("location", sql.VarChar, location);
+    request.input("machineCode", sql.VarChar, machineCode);
 
-    res.status(200).json(result.recordset);
-  } catch (error) {
-    console.error("Error fetching machine status history:", error);
-    res.status(500).json({
-      message: "Internal Server Error",
-      error: error.toString(),
-    });
-  }
-});
-
-// This route gets the current status of all machines
-router.get("/all", async (req, res) => {
-  try {
-    // Query to get the most recent status for all machines
-    const query = `
-      WITH LatestStatus AS (
-        SELECT 
-          [NoMachine],
-          [Status],
-          [Color],
-          [StartDate_Time],
-          [EndDate_Time],
-          [Product],
-          [CT],
-          [Counter],
-          [TotalCounter],
-          ROW_NUMBER() OVER (PARTITION BY [NoMachine] ORDER BY [StartDate_Time] DESC) as rn
-        FROM [PLCDATA_CKR].[dbo].[TestGoogleChart]
-        WHERE [FlgCutOff] = 0
-      )
-      SELECT *
-      FROM LatestStatus
-      WHERE rn = 1
-      ORDER BY [NoMachine]
-    `;
-
-    const result = await sql.query(query);
-    res.status(200).json(result.recordset);
-  } catch (error) {
-    console.error("Error fetching all machine statuses:", error);
-    res.status(500).json({
-      message: "Internal Server Error",
-      error: error.toString(),
-    });
-  }
-});
-
-// This route gets performance metrics for a machine
-router.get("/performance/:machineCode", async (req, res) => {
-  try {
-    const { machineCode } = req.params;
-    const { date } = req.query;
-
-    // Query to get daily performance metrics
-    const query = `
-      SELECT 
-        [NoMachine],
-        SUM([TotalCounter]) as TotalProduction,
-        AVG([CT]) as AverageCycleTime,
-        SUM([TotalSecond]) as TotalRunTime
-      FROM [PLCDATA_CKR].[dbo].[TestGoogleChart]
-      WHERE [NoMachine] = @machineCode
-        AND CAST([StartDate_Time] as DATE) = @date
-      GROUP BY [NoMachine]
-    `;
-
-    const result = await sql.query(query, {
-      machineCode,
-      date: date || new Date().toISOString().split("T")[0], // Default to current date
-    });
+    const result = await request.query(query);
 
     if (result.recordset.length === 0) {
       return res.status(404).json({
@@ -155,7 +127,12 @@ router.get("/performance/:machineCode", async (req, res) => {
       });
     }
 
-    res.status(200).json(result.recordset[0]);
+    res.status(200).json({
+      ...result.recordset[0],
+      performance: "0%", // Placeholder
+      actual: 0,
+      plan: 100,
+    });
   } catch (error) {
     console.error("Error fetching machine performance:", error);
     res.status(500).json({

@@ -7,7 +7,6 @@ const sql = require("mssql");
 router.get("/:location", async (req, res) => {
   try {
     const { location } = req.params;
-    const { lineGroup } = req.query;
 
     // Gunakan global.databases untuk mengakses database IOT_HUB
     const iotHubDb = global.databases.iotHub;
@@ -26,12 +25,6 @@ router.get("/:location", async (req, res) => {
     `;
 
     const request = iotHubDb.request();
-
-    // Tambahkan filter opsional
-    if (lineGroup) {
-      query += ` AND [LineGroup] = @lineGroup`;
-      request.input("lineGroup", sql.VarChar, lineGroup);
-    }
 
     query += ` ORDER BY [CreatedAt] DESC`;
 

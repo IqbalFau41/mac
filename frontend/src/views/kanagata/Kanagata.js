@@ -1,52 +1,26 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
-import {
-  CRow,
-  CCol,
-  CCard,
-  CCardBody,
-  CCardHeader,
-  CSpinner,
-  CProgress,
-  CFormSelect,
-} from '@coreui/react'
+import { CRow, CCol, CCard, CCardBody, CCardHeader, CSpinner, CProgress } from '@coreui/react'
 import { Link } from 'react-router-dom'
 import { getStatusConfig, generateDefaultSignal } from '../../utils/signalLightConfig'
 import '../../scss/signalLightConfig.scss'
 
 const Kanagata = () => {
   const [machineNames, setMachineNames] = useState([])
-  const [lineGroups, setLineGroups] = useState([])
-  const [selectedLineGroup, setSelectedLineGroup] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [location] = useState('CKR')
-
-  // Fetch line groups
-  useEffect(() => {
-    const fetchLineGroups = async () => {
-      try {
-        const response = await axios.get(`/api/machine-names/${location}/line-groups`)
-        setLineGroups(response.data.map((group) => group.LINE_GROUP))
-      } catch (err) {
-        console.error('Error fetching line groups:', err)
-      }
-    }
-
-    fetchLineGroups()
-  }, [location])
 
   // Fetch machine names and status
   useEffect(() => {
     const fetchMachineNames = async () => {
       try {
         setLoading(true)
-        const params = selectedLineGroup ? { params: { lineGroup: selectedLineGroup } } : {}
 
         // Make parallel API calls for machine names and production history
         const [machineResponse, historyResponse] = await Promise.all([
-          axios.get(`/api/machine-names/${location}`, params),
-          axios.get(`/api/machine-history/${location}`, params),
+          axios.get(`/api/machine-names/${location}`),
+          axios.get(`/api/machine-history/${location}`),
         ])
 
         // Transform machine data
@@ -87,7 +61,7 @@ const Kanagata = () => {
     }
 
     fetchMachineNames()
-  }, [selectedLineGroup, location])
+  }, [location])
 
   // Error handling
   if (error) {
@@ -102,23 +76,6 @@ const Kanagata = () => {
 
   return (
     <>
-      {/* Line Group Filter Section */}
-      <CRow className="mb-3">
-        <CCol md={4}>
-          <CFormSelect
-            value={selectedLineGroup}
-            onChange={(e) => setSelectedLineGroup(e.target.value)}
-          >
-            <option value="">All Line Groups</option>
-            {lineGroups.map((group, index) => (
-              <option key={index} value={group}>
-                {group}
-              </option>
-            ))}
-          </CFormSelect>
-        </CCol>
-      </CRow>
-
       {/* Main Content Area */}
       {loading ? (
         <CRow>
